@@ -1,0 +1,7 @@
+{
+    "require": {
+        "dompdf/dompdf": "^0.7.0",
+        "softr/asaas-php-sdk": "1.0",
+        "kriswallsmith/buzz": "^0.15.0"
+    }
+}
