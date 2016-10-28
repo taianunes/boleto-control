@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Compiled source #
 ###################
 *.com
@@ -10,6 +11,8 @@
 # WordPress Config #
 ####################
 wp-config.php
+=======
+>>>>>>> 125920c81fb017f333bc06ef9d3672f8c0797ef2
 *.log
 wp-config.php
 wp-content/advanced-cache.php
@@ -21,7 +24,10 @@ wp-content/upgrade/
 wp-content/uploads/
 wp-content/wp-cache-config.php
 wp-content/plugins/hello.php
+<<<<<<< HEAD
 vendor/
+=======
+>>>>>>> 125920c81fb017f333bc06ef9d3672f8c0797ef2
 
 /.htaccess
 /license.txt
@@ -29,6 +35,7 @@ vendor/
 /sitemap.xml
 /sitemap.xml.gz
 
+<<<<<<< HEAD
 # Packages #
 ############
 # it's better to unpack these files and commit the raw source
@@ -57,3 +64,5 @@ vendor/
 .Trashes
 ehthumbs.db
 Thumbs.db
+=======
+>>>>>>> 125920c81fb017f333bc06ef9d3672f8c0797ef2
