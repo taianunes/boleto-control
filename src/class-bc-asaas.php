@@ -16,7 +16,7 @@ class WC_Boleto_Control_Asaas {
 	 *
 	 * @return self
 	 */
-	public static function instance(){
+	public static function instance() {
 		return self::$instance ? self::$instance : self::$instance = new self;
 	}
 
@@ -79,11 +79,14 @@ class WC_Boleto_Control_Asaas {
 			'access_token'  => $this->api->key,
 		);
 
-		var_dump($url);
+		$args = array(
+			'timeout' 	=> 60,
+			'limit' 	=> '50',
+			'headers' 	=> $headers
+		);
 
-		$response = wp_remote_get( esc_url_raw( $url ), array( 'timeout' => 60, 'limit' => '50', 'headers' => $headers ) );
-
-		var_dump($response);
+		//get api first response
+		$response = wp_remote_get( esc_url_raw( $url ), $args );
 
 		if ( is_wp_error( $response ) ) {
 			if ( isset( $response->errors['http_request_failed'] ) ) {
@@ -172,11 +175,7 @@ class WC_Boleto_Control_Asaas {
 			'access_token' 	=> $this->api->key,
 		);
 
-		 var_dump( $url, $args );
-
 		$response = wp_remote_request( esc_url_raw( $url ), $args );
-
-		 var_dump($response);
 
 		if ( is_wp_error( $response ) ) {
 			return $response;
@@ -213,11 +212,11 @@ class WC_Boleto_Control_Asaas {
 	 * @return stdClass|WP_Error
 	 */
 	public function get_by_id( $endpoint, $obj_id ) {
-		return $this->get( $endpoint .'/'. $obj_id, null );
+		return $this->get( $endpoint . '/' . $obj_id, null );
 	}
 
 	/**
-	 * Returns a list of <endpoint> objets from speciffic  customers
+	 * Returns a list of <endpoint> objets from specific  customers
 	 * Possible Endpoints: subscriptions, payments, notifications
 	 *
 	 * @param  string $endpoint String for API endpoint
@@ -226,11 +225,11 @@ class WC_Boleto_Control_Asaas {
 	 * @return stdClass|WP_Error
 	 */
 	public function get_by_customer( $endpoint, $obj_id ) {
-		return $this->get( 'customers/'. $obj_id .'/'. $endpoint, null );
+		return $this->get( 'customers/' . $obj_id . '/' . $endpoint, null );
 	}
 
 	/**
-	 * Returns a list of <endpoint> objets from speciffic subscription
+	 * Returns a list of <endpoint> objets from specific subscription
 	 * Possible Endpoints: payments, notifications
 	 *
 	 * @param  string $endpoint String for API endpoint
@@ -239,11 +238,11 @@ class WC_Boleto_Control_Asaas {
 	 * @return stdClass|WP_Error
 	 */
 	public function get_by_subscription( $endpoint, $obj_id ) {
-		return $this->get( 'subscriptions/'. $obj_id .'/'. $endpoint, null );
+		return $this->get( 'subscriptions/' . $obj_id  . '/' . $endpoint, null );
 	}
 
 	/**
-	 * Returns a list of payments objets from speciffic installment
+	 * Returns a list of payments objets from specific installment
 	 *
 	 * @param  string $endpoint String for API endpoint
 	 * @param  string $obj_id   Asass object id
@@ -251,7 +250,7 @@ class WC_Boleto_Control_Asaas {
 	 * @return stdClass|WP_Error
 	 */
 	public function get_by_installment( $obj_id ) {
-		return $this->get( 'payments?installment='. $obj_id .'/', null );
+		return $this->get( 'payments?installment=' . $obj_id . '/', null );
 	}
 
 	/**
@@ -265,7 +264,7 @@ class WC_Boleto_Control_Asaas {
 		$customers = $this->get_all( 'customers' );
 
 		foreach ( $customers as $data ) {
-			if ( $data->customer->email && $data->customer->email === $email ) {
+			if ( ! empty($data->customer->email) && $data->customer->email === $email ) {
 				return $data->customer;
 			}
 		}
@@ -280,8 +279,7 @@ class WC_Boleto_Control_Asaas {
 	 *
 	 * @return stdClass|WP_Error
 	 */
-	public function create( $endpoint, $data = array() )
-	{
+	public function create( $endpoint, $data = array() ) {
 		return $this->post(  $endpoint, $data );
 	}
 
@@ -294,9 +292,8 @@ class WC_Boleto_Control_Asaas {
 	 *
 	 * @return stdClass|WP_Error
 	 */
-	public function update_by_id( $endpoint, $obj_id , $data = array() )
-	{
-		return $this->post( $endpoint .'/'. $obj_id, $data );
+	public function update_by_id( $endpoint, $obj_id , $data = array() ) {
+		return $this->post( $endpoint . '/' . $obj_id, $data );
 	}
 
 	/**
@@ -307,11 +304,8 @@ class WC_Boleto_Control_Asaas {
 	 *
 	 * @return stdClass|WP_Error
 	 */
-	public function delete_by_id( $endpoint, $obj_id )
-	{
-		return $this->delete( $endpoint .'/'. $obj_id, null);
+	public function delete_by_id( $endpoint, $obj_id ) {
+		return $this->delete( $endpoint . '/' . $obj_id, null);
 	}
-
-
 
 }
