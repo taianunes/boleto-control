@@ -42,7 +42,7 @@ class WC_Boleto_Control_Asaas {
 	 */
 	private function __construct() {
 
-		//turns api array into object
+		// Turns api array into object
 		$this->api = (object) $this->api;
 	}
 
@@ -56,7 +56,15 @@ class WC_Boleto_Control_Asaas {
 	 */
 	public function build_url( $endpoint, $data = array() ) {
 
-		return "{$this->api->domain}{$this->api->path}{$this->api->version}/{$endpoint}";
+		// Constructs url address
+		$url = "{$this->api->domain}{$this->api->path}{$this->api->version}/{$endpoint}";
+
+		// If we have data we add it
+		if ( isset( $data ) ) {
+			$url = add_query_arg( $data, $url );
+		}
+
+		return $url;
 	}
 
 	/**
@@ -81,11 +89,10 @@ class WC_Boleto_Control_Asaas {
 
 		$args = array(
 			'timeout' 	=> 60,
-			'limit' 	=> '50',
 			'headers' 	=> $headers
 		);
 
-		//get api first response
+		// Get api first response
 		$response = wp_remote_get( esc_url_raw( $url ), $args );
 
 		if ( is_wp_error( $response ) ) {
@@ -95,12 +102,32 @@ class WC_Boleto_Control_Asaas {
 			return $response;
 		}
 
-		// if the response is not an image, let's json decode the body
+		// Get first response
 		$response = json_decode( wp_remote_retrieve_body( $response ) );
 
-		// When having data, return it already
-		// @todo consider pagination
+		$body_var = get_object_vars( $response );
+
+		// Return if we have only this data
 		if ( ! empty( $response->data ) ) {
+
+			$offset = 10;
+
+			// If has more values -> make loop
+			while ( $body_var['hasMore'] ) {
+
+				// Builds url sending offset var
+				$url = $this->build_url( $endpoint, array( 'offset' => $offset ) );
+
+				$page = json_decode( wp_remote_retrieve_body( wp_remote_get( esc_url_raw( $url ), $args ) ) );
+
+				$response->data = array_merge( $response->data ,$page->data );
+
+				$body_var = get_object_vars( $page );
+
+				$offset += 10;
+
+			};
+
 			return $response->data;
 		}
 
@@ -200,6 +227,7 @@ class WC_Boleto_Control_Asaas {
 	 * @return stdClass|WP_Error
 	 */
 	public function get_all( $endpoint ) {
+		//return $this->get( $endpoint, array( 'limit' => 50 ) );
 		return $this->get( $endpoint, null );
 	}
 
