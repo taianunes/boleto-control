@@ -42,7 +42,7 @@ class WC_Boleto_Control_Asaas {
 	 */
 	private function __construct() {
 
-		//turns api array into object
+		// Turns api array into object
 		$this->api = (object) $this->api;
 	}
 
@@ -56,16 +56,24 @@ class WC_Boleto_Control_Asaas {
 	 */
 	public function build_url( $endpoint, $data = array() ) {
 
-		return "{$this->api->domain}{$this->api->path}{$this->api->version}/{$endpoint}";
+		// Constructs url address
+		$url = "{$this->api->domain}{$this->api->path}{$this->api->version}/{$endpoint}";
+
+		// If we have data we add it
+		if ( ! empty( $data ) ) {
+			$url = add_query_arg( $data, $url );
+		}
+
+		return $url;
 	}
 
 	/**
-	 * Performs a GET request against the Event Aggregator service
+	 * Performs a GET request against the Asaas API service
 	 *
-	 * @param string $endpoint   Endpoint for the Event Aggregator service
+	 * @param string $endpoint   Endpoint for the Asaas API service
 	 * @param array  $data       Parameters to send to the endpoint
 	 *
-	 * @return stdClass|WP_Error
+	 * @return array|stdClass|WP_Error
 	 */
 	public function get( $endpoint, $data = array() ) {
 		$url = $this->build_url( $endpoint, $data );
@@ -81,11 +89,10 @@ class WC_Boleto_Control_Asaas {
 
 		$args = array(
 			'timeout' 	=> 60,
-			'limit' 	=> '50',
 			'headers' 	=> $headers
 		);
 
-		//get api first response
+		// Get api first response
 		$response = wp_remote_get( esc_url_raw( $url ), $args );
 
 		if ( is_wp_error( $response ) ) {
@@ -95,12 +102,41 @@ class WC_Boleto_Control_Asaas {
 			return $response;
 		}
 
-		// if the response is not an image, let's json decode the body
+		// Get first response
 		$response = json_decode( wp_remote_retrieve_body( $response ) );
 
-		// When having data, return it already
-		// @todo consider pagination
+		$body_var = get_object_vars( $response );
+
+		// Return if we have only this data
 		if ( ! empty( $response->data ) ) {
+
+			$offset = sizeof( $response->data );
+
+			// If has more values do next requests
+			while ( $body_var['hasMore'] ) {
+
+				// Builds url sending offset var
+				$url = $this->build_url( $endpoint, array( 'offset' => $offset ) );
+
+				// Gets next page
+				$page = wp_remote_get( esc_url_raw( $url ), $args );
+
+				if ( is_wp_error( $page ) ) {
+					return $page;
+				}
+
+				$page = json_decode( wp_remote_retrieve_body( $page ) );
+
+				// Merge page data
+				$response->data = array_merge( $response->data ,$page->data );
+
+				$body_var = get_object_vars( $page );
+
+				// Increment offset
+				$offset += sizeof( $page->data );
+
+			};
+
 			return $response->data;
 		}
 
@@ -108,12 +144,12 @@ class WC_Boleto_Control_Asaas {
 	}
 
 	/**
-	 * Performs a POST request against the Event Aggregator service
+	 * Performs a POST request against Asaas API service
 	 *
-	 * @param string $endpoint   Endpoint for the Event Aggregator service
+	 * @param string $endpoint   Endpoint for the Asaas API service
 	 * @param array  $data       Parameters to send to the endpoint
 	 *
-	 * @return stdClass|WP_Error
+	 * @return array|stdClass|WP_Error
 	 */
 	public function post( $endpoint, $data = array() ) {
 		$url = $this->build_url( $endpoint );
@@ -134,11 +170,7 @@ class WC_Boleto_Control_Asaas {
 			'access_token' => $this->api->key,
 		);
 
-		// var_dump( $url, $args );
-
 		$response = wp_remote_post( esc_url_raw( $url ), $args );
-
-		// var_dump($response);
 
 		if ( is_wp_error( $response ) ) {
 			return $response;
@@ -147,7 +179,6 @@ class WC_Boleto_Control_Asaas {
 		$response = json_decode( wp_remote_retrieve_body( $response ) );
 
 		// When having data, return it already
-		// @todo consider pagination
 		if ( ! empty( $response->data ) ) {
 			return $response->data;
 		}
@@ -155,6 +186,14 @@ class WC_Boleto_Control_Asaas {
 		return $response;
 	}
 
+	/**
+	 * Performs a DELETE request against Asaas API service
+	 *
+	 * @param string $endpoint   Endpoint for the Asaas API service
+	 * @param array  $data       Parameters to send to the endpoint
+	 *
+	 * @return array|stdClass|WP_Error
+	 */
 	public function delete( $endpoint, $data = array() ) {
 		$url = $this->build_url( $endpoint );
 
@@ -184,7 +223,6 @@ class WC_Boleto_Control_Asaas {
 		$response = json_decode( wp_remote_retrieve_body( $response ) );
 
 		// When having data, return it already
-		// @todo consider pagination
 		if ( ! empty( $response->data ) ) {
 			return $response->data;
 		}
@@ -200,6 +238,7 @@ class WC_Boleto_Control_Asaas {
 	 * @return stdClass|WP_Error
 	 */
 	public function get_all( $endpoint ) {
+		//return $this->get( $endpoint, array( 'limit' => 50 ) );
 		return $this->get( $endpoint, null );
 	}
 
